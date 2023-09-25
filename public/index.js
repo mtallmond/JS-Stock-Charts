@@ -1,9 +1,14 @@
 //retrieve stock data from http://twelvedata.com/
 //make sure to read documentation https://twelvedata.com/docs#stocks
 //Make sure to use the api secret to
+let api_base_url = "https://twelvedata.com"
 async function getStocksFromApi(){
     try {
-        let response = null
+        let response = fetch(api_base_url, {
+            headers:{
+                //pass api secret here
+            }
+        })
 
         let data = null
     
@@ -43,10 +48,50 @@ async function main() {
     console.log(stocks[0].values)
 
     const timeChartCanvas = document.querySelector('#time-chart');
-    //Start coding the first chart here since it references the canvas on line 3   
+    stocks.forEach(stock => stock.values.reverse())
+    new Chart(timeChartCanvas.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: stocks[0].values.map(value => value.datetime),
+            datasets: stocks.map( stock => ({
+                label: stock.meta.symbol,
+                data: stock.values.map(value => parseFloat(value.high)),
+                backgroundColor:  getColor(stock.meta.symbol),
+                borderColor: getColor(stock.meta.symbol),
+            }))
+        }
+    });
     
     const highestPriceChartCanvas = document.querySelector('#highest-price-chart');
-    //build your second chart
+    stocks.forEach(stock => stock.values.reverse())
+
+    new Chart(highestPriceChartCanvas, {
+        type: 'bar',
+        data: {
+            labels: stocks.map(stock => stock.meta.symbol),
+            datasets: [{
+                label: 'Highest',
+                backgroundColor: stocks.map(stock => (
+                    getColor(stock.meta.symbol)
+                )),
+                borderColor: stocks.map(stock => (
+                    getColor(stock.meta.symbol)
+                )),
+                data: stocks.map(stock => (
+                    findHighest(stock.values)
+                ))
+            }]
+        }
+    });
+    function findHighest(values) {
+        let highest = 0;
+        values.forEach(value => {
+            if (parseFloat(value.high) > highest) {
+                highest = value.high
+            }
+        })
+        return highest
+    }
 
     const averagePriceChartCanvas = document.querySelector('#average-price-chart');
     //this is the bonus you don't have to do it
